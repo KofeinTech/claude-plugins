@@ -120,16 +120,32 @@ curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
   "https://api.figma.com/v1/images/$FILE_KEY?ids=$IDS&format=svg"
 ```
 
-Download each SVG:
+Download each SVG to `design/assets/`:
 ```bash
 curl -s -o "design/assets/$ICON_NAME.svg" "$SVG_URL"
 ```
 
-Skip raster images (IMAGE fills) -- these are placeholder photos/avatars in Figma
-that will be loaded from the backend in the real app. The screen JSON marks their
-position with `"type": "IMAGE"` fills so developers know where images go.
+### Export image fills (photos, avatars, backgrounds)
 
-Sanitize filenames: lowercase, replace spaces with `-`, remove special chars.
+After building screen JSONs, scan all screen JSONs for `"type": "IMAGE"` fills.
+Collect unique `imageRef` hashes across all screens (deduplicate).
+
+Fetch the image fill URLs:
+```bash
+curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
+  "https://api.figma.com/v1/files/$FILE_KEY/images"
+```
+
+This returns `meta.images` -- a map of `imageRef` hash to download URL.
+Download only the refs that appear in screen JSONs:
+```bash
+curl -s -o "design/assets/images/$NAME.png" "$IMAGE_URL"
+```
+
+Save to `design/assets/images/`. Deduplicate by imageRef -- don't download
+the same image twice. Use the Figma node name for the filename.
+
+Sanitize all filenames: lowercase, replace spaces with `-`, remove special chars.
 
 ## Step 5 — Build the screen JSON
 
@@ -198,8 +214,11 @@ design/
   screens/
     login_screen.json   -- screen structure (one file per exported frame)
   assets/
-    icon_email.svg      -- exported SVG icons
-    icon_lock.svg
+    icon-email.svg      -- exported SVG icons
+    icon-lock.svg
+    images/
+      hero-image.png   -- photos, avatars, backgrounds from Figma
+      avatar.png
 ```
 
 The screen filename is derived from the Figma frame name:
