@@ -1,5 +1,5 @@
 ---
-name: Figma Check
+name: figma-check
 description: Verify implemented UI matches Figma design. Compares spacing, colors, typography, layout against design tokens with smart tolerance.
 ---
 

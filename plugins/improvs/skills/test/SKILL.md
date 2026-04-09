@@ -1,5 +1,5 @@
 ---
-name: Test
+name: test
 description: Run independent test generation on the current branch. Dispatches test subagent that writes tests from Jira AC, not from implementation.
 ---
 

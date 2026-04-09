@@ -1,5 +1,5 @@
 ---
-name: Finish Task
+name: finish
 description: Complete current task. Checks code is committed and tested, pushes, creates PR, updates Jira status, logs time spent.
 ---
 

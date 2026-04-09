@@ -1,5 +1,5 @@
 ---
-name: Start Task
+name: start
 description: Begin working on a Jira task. Reads ticket, evaluates complexity, creates branch, updates Jira, records start time. Handles trivial to complex tasks with appropriate workflow.
 ---
 

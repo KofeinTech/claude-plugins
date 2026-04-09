@@ -1,5 +1,5 @@
 ---
-name: Code Review
+name: review
 description: Review current branch against Improvs rules and Jira acceptance criteria. Hard-blocks secrets, dispatches code reviewer, verifies AC coverage.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: Onboard
+name: onboard
 description: Generate a project briefing for a new team member (developer or PM). Reads Jira project info, analyzes codebase, shows current sprint state.
 ---
 

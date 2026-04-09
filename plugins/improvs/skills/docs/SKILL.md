@@ -1,5 +1,5 @@
 ---
-name: Docs
+name: docs
 description: Generate or update project documentation -- README, API docs, architecture, deployment guide, env variables, and database schema.
 ---
 

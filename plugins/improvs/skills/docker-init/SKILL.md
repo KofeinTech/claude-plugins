@@ -1,5 +1,5 @@
 ---
-name: Docker Init
+name: docker-init
 description: Set up Docker for a project. Generates Dockerfile, docker-compose.yml, docker-compose.prod.yml, and .dockerignore. Detects stack automatically.
 ---
 
