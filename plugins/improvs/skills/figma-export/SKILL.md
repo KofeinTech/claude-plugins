@@ -48,15 +48,29 @@ URL formats to handle:
 The `NODE_ID` in the URL uses `-` (e.g., `12-34`). The API uses `:` (e.g., `12:34`).
 Convert `-` to `:` for API calls.
 
-If the URL has no `node-id` parameter, ask: "This URL points to the whole file. Paste a link to a specific frame (right-click frame > Copy link)."
+If the URL has no `node-id` parameter, export ALL screens from the file's
+first page (usually "Design"). Fetch the file structure at depth=2:
+```bash
+curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
+  "https://api.figma.com/v1/files/$FILE_KEY?depth=2"
+```
+Find the first page, collect all top-level FRAME children as screens.
+Skip non-screen frames: names starting with "Tools/", "Components", "label".
+
+If `node-id` IS present, export only that single screen.
 
 ## Step 2 — Fetch the design data
 
-Use Bash with curl to call the Figma REST API:
-
+**Single screen** (node-id present):
 ```bash
 curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
   "https://api.figma.com/v1/files/$FILE_KEY/nodes?ids=$NODE_ID&geometry=paths"
+```
+
+**All screens** (no node-id): fetch screen nodes in batches of 15 IDs per request:
+```bash
+curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
+  "https://api.figma.com/v1/files/$FILE_KEY/nodes?ids=$ID1,$ID2,...,$ID15"
 ```
 
 If the response contains `"err"` or `"status": 403`, report:
@@ -65,6 +79,7 @@ If the response contains `"err"` or `"status": 403`, report:
 - 429: "Rate limited. Wait a minute and try again."
 
 Parse the response. The node data is at `nodes["NODE_ID"].document`.
+Process each screen through Steps 3-6 individually, merging tokens across all screens.
 
 ## Step 3 — Extract design tokens
 
@@ -205,25 +220,24 @@ Print a summary:
 FIGMA EXPORT COMPLETE
 ━━━━━━━━━━━━━━━━━━━━
 Source: $FIGMA_URL
-Screen: $SCREEN_NAME
 
 Files created:
-  design/screens/$FILENAME.json    (N nodes, M children deep)
-  design/tokens.json               (N colors, M text styles, K spacing values)
-  design/assets/                   (N SVG icons exported)
+  design/screens/    N screen JSON files
+  design/tokens.json (N colors, M text styles, K spacing values)
+  design/assets/     N SVG icons exported
 
 API calls used: N (daily budget: ~200/day shared)
 
 Next steps:
-  /improvs:figma-ui design/screens/$FILENAME.json   -- build Flutter from this export
-  /improvs:figma-check design/screens/$FILENAME.json -- verify implementation matches
+  /improvs:figma-ui design/screens/<screen>.json   -- build Flutter from export
+  /improvs:figma-check design/screens/<screen>.json -- verify implementation
 ```
 
 ## Rules
 
 - NEVER hardcode a Figma PAT in the skill output, code, or files. Always read from `$FIGMA_API_KEY` env var.
 - NEVER export the raw Figma API response as-is. Always transform to the simplified Claude-friendly format. Raw responses are 10-50x larger and waste context.
-- NEVER export more than one screen per invocation. If the user pastes a page URL with multiple frames, ask which frame to export.
+- When exporting all screens (no node-id), use a single Python script that batches all API calls efficiently. A full file export of ~70 screens should use ~10-12 API calls total.
 - If `design/` folder doesn't exist, create it. Also create `.gitkeep` files if needed.
 - If curl fails with a network error, suggest the developer check their internet connection and token validity.
 - Keep SVG filenames consistent: lowercase, hyphens, no spaces. E.g., `icon-arrow-left.svg`.
