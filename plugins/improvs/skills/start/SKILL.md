@@ -155,7 +155,15 @@ font, image, responsive, mobile, tablet.
 If UI keywords found, use AskUserQuestion:
 "This task involves UI changes. Please provide the Figma node URL for the design."
 
-If developer provides a URL, read the Figma design via Figma MCP:
+If developer provides a URL, try to read the design:
+
+1. **Local export:** Check if `design/screens/` contains a JSON file for this screen
+   (match by screen name from the URL or Jira ticket title). If found, read it.
+
+2. **Suggest export:** If no local export exists, suggest:
+   "Run `/improvs:figma-export <URL>` to export the design locally, then re-run /start."
+
+From the local design JSON, extract:
 - Layout structure (flex, grid, positioning)
 - Spacing values (padding, margin, gaps)
 - Colors (exact hex or design tokens)

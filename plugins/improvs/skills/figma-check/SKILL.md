@@ -5,13 +5,19 @@ description: Verify implemented UI matches Figma design. Compares spacing, color
 
 # Figma Check
 
-Figma node URL is provided as $ARGUMENTS. If no argument given, check if
-a Figma URL was saved during `/start` in the current session. If not found,
-ask: "Figma node URL for the screen to verify:"
+$ARGUMENTS is a local design JSON path (e.g., `design/screens/login_screen.json`).
+
+If no argument given, check if a local export exists in `design/screens/`.
+If multiple files exist, list them and ask which to check. If none exist, ask:
+"Run `/improvs:figma-export <FIGMA_URL>` first, then re-run this skill with the JSON path."
 
 ## Step 1 — Read the design
 
-Via Figma MCP, read the Figma node. Extract:
+Read the JSON file from the repo. It was created by `/improvs:figma-export`
+and already contains the simplified structure with layout, colors, typography.
+Also read `design/tokens.json` if it exists.
+
+Extract:
 - Layout structure (flex direction, alignment, wrapping)
 - Spacing values (padding, margin, gaps — all values in px)
 - Colors (hex values, opacity)
