@@ -207,15 +207,20 @@ Example: `PROJ-42-biometric-login`
 If the branch already exists, ask: "Branch $KEY-$DESCRIPTION already exists.
 Switch to it or create a new name?"
 
-## Step 7 — Move Jira to "In Progress"
+## Step 7 — Move Jira to "In Progress" and set story points
 
 Via Jira MCP:
 - Transition ticket to "In Progress"
 - If `$IS_HOTFIX`, add label "hotfix" to the ticket
+- **Set story points** based on complexity classification:
+  - Trivial → **1** story point
+  - Simple → **3** story points
+  - Complex → **8** story points
 - Add comment using proper ADF nodes (never raw Markdown or `\n` in text nodes):
   - **paragraph**: "⏱ Work started"
   - **paragraph**: "Branch: $KEY-$DESCRIPTION"
   - **paragraph**: "Complexity: $COMPLEXITY (trivial / simple / complex)"
+  - **paragraph**: "Story points: $POINTS"
   - **paragraph**: "Hotfix: $IS_HOTFIX (true / false)"
   - **paragraph**: "Started at: $ISO_TIMESTAMP"
 
