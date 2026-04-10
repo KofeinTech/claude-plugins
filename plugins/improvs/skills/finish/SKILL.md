@@ -179,7 +179,7 @@ If `$IS_HOTFIX` is true, create a second PR after the first:
 This ensures the hotfix reaches both branches. The `main` PR is merged first
 (urgent), and the `develop` sync PR is merged after.
 
-## Step 5 — Update Jira fields and transition
+## Step 5 — Update Jira fields, link PR, and transition
 
 Via Jira MCP:
 
@@ -187,6 +187,24 @@ Via Jira MCP:
 
 **Update ticket fields:**
 - **End date** (`dueDate`): set to today's date in ISO format (`YYYY-MM-DD`)
+
+**Link PR to ticket** via Jira MCP remote link:
+```
+POST /rest/api/3/issue/$KEY/remotelink
+{
+  "globalId": "github-pr=$REPO_OWNER/$REPO_NAME/$PR_NUMBER",
+  "object": {
+    "url": "$PR_URL",
+    "title": "PR #$PR_NUMBER: $PR_TITLE",
+    "icon": {
+      "url16x16": "https://github.com/favicon.ico",
+      "title": "GitHub"
+    }
+  }
+}
+```
+
+If hotfix (two PRs created), link both PRs to the ticket.
 
 No comment needed — PR link is visible in Jira's development panel via GitHub integration.
 
