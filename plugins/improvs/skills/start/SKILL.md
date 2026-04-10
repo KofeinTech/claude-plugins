@@ -239,23 +239,9 @@ metadata lives in ticket fields so `/finish` and `/review` can read it reliably.
   - Complex → **8** story points
 - **Labels**: if `$IS_HOTFIX`, add label `hotfix` to existing labels
 
-**Link branch to ticket** via Jira MCP remote link:
-```
-POST /rest/api/3/issue/$KEY/remotelink
-{
-  "globalId": "github-branch=$REPO_OWNER/$REPO_NAME/$BRANCH",
-  "object": {
-    "url": "https://github.com/$REPO_OWNER/$REPO_NAME/tree/$KEY-$DESCRIPTION",
-    "title": "Branch: $KEY-$DESCRIPTION",
-    "icon": {
-      "url16x16": "https://github.com/favicon.ico",
-      "title": "GitHub"
-    }
-  }
-}
-```
-
-Read `$REPO_OWNER` and `$REPO_NAME` from `git remote get-url origin`.
+**Development panel:** The branch automatically appears in the ticket's Development
+section because the branch name contains the ticket key (`$KEY-$DESCRIPTION`)
+and is pushed to origin. This is handled by the GitHub for Jira integration app.
 
 **No comment.** The `/finish` skill reads metadata from ticket fields:
 - **Complexity** — derived from story points (1→trivial, 3→simple, 8→complex)
