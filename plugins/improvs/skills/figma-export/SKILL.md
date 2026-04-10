@@ -6,7 +6,7 @@ description: Export Figma design to local JSON and SVG assets via REST API using
 # Figma Export
 
 Exports a Figma frame to the project's `design/` folder so that other skills
-(`figma-ui`, `figma-check`) can work from local files without hitting Figma API.
+(`figma-check`, `/improvs:start`) can work from local files without hitting Figma API.
 
 ## Usage
 
@@ -248,8 +248,8 @@ Files created:
 API calls used: N (daily budget: ~200/day shared)
 
 Next steps:
-  /improvs:figma-ui design/screens/<screen>.json   -- build Flutter from export
-  /improvs:figma-check design/screens/<screen>.json -- verify implementation
+  /improvs:start <JIRA-KEY>      -- start task (reads design from design/ folder)
+  /improvs:figma-check            -- verify implementation matches export
 ```
 
 ## Rules
