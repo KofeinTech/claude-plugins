@@ -125,7 +125,10 @@ If multiple commits, generate title from Jira ticket title:
 Where $SCOPE is derived from the primary directory changed
 (e.g., `auth`, `settings`, `api`).
 
-**PR body:** Use this template:
+**PR body:** Use the template below. **CRITICAL: The body MUST be a properly
+formatted multi-line string with real newline characters — NOT a single line
+with literal `\n` escape sequences.** When passing the body to GitHub MCP,
+ensure each line break is an actual newline in the string value.
 
 ```markdown
 ## Jira Ticket
@@ -165,7 +168,12 @@ If `$IS_HOTFIX` is true, create a second PR after the first:
 - Base: `develop`
 - Head: `$BRANCH`
 - Title: `sync: merge hotfix $KEY into develop`
-- Body: `Syncing hotfix $KEY ($TITLE) from main back to develop.\n\nSource PR: #$FIRST_PR_NUMBER`
+- Body (multi-line, NOT literal `\n`):
+  ```
+  Syncing hotfix $KEY ($TITLE) from main back to develop.
+
+  Source PR: #$FIRST_PR_NUMBER
+  ```
 
 This ensures the hotfix reaches both branches. The `main` PR is merged first
 (urgent), and the `develop` sync PR is merged after.
