@@ -215,16 +215,30 @@ Example: `PROJ-42-biometric-login`
 If the branch already exists, ask: "Branch $KEY-$DESCRIPTION already exists.
 Switch to it or create a new name?"
 
-## Step 7 — Move Jira to "In Progress" and set story points
+## Step 7 — Push branch to origin
 
-Via Jira MCP:
-- Transition ticket to "In Progress"
-- If `$IS_HOTFIX`, add label "hotfix" to the ticket
-- **Set story points** based on complexity classification:
+Push the newly created branch so it appears in Jira's development panel
+(via the GitHub-Jira integration) and is available for remote tracking:
+
+```bash
+git push -u origin $KEY-$DESCRIPTION
+```
+
+## Step 8 — Update Jira ticket fields and move to "In Progress"
+
+Via Jira MCP, update **all** of the following in a single or sequential calls:
+
+**Transition:** Move ticket to "In Progress".
+
+**Update ticket fields:**
+- **Start date** (`startDate`): set to today's date in ISO format (`YYYY-MM-DD`)
+- **Story points** (`story_points` or `customfield_10016`): set based on complexity:
   - Trivial → **1** story point
   - Simple → **3** story points
   - Complex → **8** story points
-- Add comment using proper ADF nodes (never raw Markdown or `\n` in text nodes):
+- **Labels**: if `$IS_HOTFIX`, add label `hotfix` to existing labels
+
+**Add comment** using proper ADF nodes (never raw Markdown or `\n` in text nodes):
   - **paragraph**: "⏱ Work started"
   - **paragraph**: "Branch: $KEY-$DESCRIPTION"
   - **paragraph**: "Complexity: $COMPLEXITY (trivial / simple / complex)"
@@ -238,7 +252,7 @@ time spent. Use ISO 8601 format: `2026-04-05T10:30:00.000+0000`
 The complexity tag is read by `/finish` to decide whether to require /review and /test.
 The hotfix flag is read by `/finish` to decide whether to create dual PRs (main + develop).
 
-## Step 8 — Present summary and begin
+## Step 9 — Present summary and begin
 
 Display the work summary based on complexity:
 
