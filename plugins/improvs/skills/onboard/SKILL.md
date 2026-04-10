@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Generate a project briefing for a new team member (developer or PM). Reads Jira project info, analyzes codebase, shows current sprint state.
+description: Generate a project briefing for a new team member (developer or PM). Reads Jira project info, analyzes codebase, shows current work in flight.
 ---
 
 # Onboard
@@ -14,7 +14,7 @@ Ask: "Are you a developer or PM on this project?"
 
 This changes what to emphasize:
 - **Developer** — architecture, codebase, commands, where things are
-- **PM** — team, sprint, client, deadlines, process
+- **PM** — team, active Epics, client, deadlines, process
 
 ## Step 2 — Read project-level info
 
@@ -58,13 +58,13 @@ Skip this step for PMs.
 
 Via Jira MCP:
 
-**Current sprint** (if sprints used):
-- Sprint name, goal, dates, progress
-- Tickets by status (to do / in progress / in review / done)
+**Active Epics** (what's in flight right now):
+- Epic name + short status (count of Tasks Done / Total)
+- Which Epic is the "current" focus (the one with Tasks in In Progress)
 
-**If kanban:**
-- Top priority items
-- What's in progress
+**Current work:**
+- Tickets in In Progress grouped by assignee
+- Top items in To Do (what will be pulled next)
 
 **Team:**
 - Who's working on what (In Progress tickets grouped by assignee)
@@ -77,9 +77,9 @@ Via Jira MCP:
 If `ONBOARDING.md` exists in the repo root:
 - Read it
 - Compare with current data
-- If stale (team changed, sprint moved on, architecture evolved),
+- If stale (team changed, active Epics changed, architecture evolved),
   note what's outdated and update it
-- If still accurate, show it to the developer with current sprint state appended
+- If still accurate, show it to the developer with current work state appended
 
 If it doesn't exist, generate a new one.
 
@@ -124,12 +124,17 @@ $DIRECTORY_STRUCTURE_WITH_DESCRIPTIONS
 ### Conventions
 - $KEY_CONVENTIONS (from CLAUDE.md and rules)
 
-## Current Sprint
-$SPRINT_NAME — "$SPRINT_GOAL"
-Progress: $X/$Y tickets ($PERCENT%)
+## Current Work
+
+Active Epic(s):
+- $EPIC_KEY $EPIC_NAME ($DONE_TASKS/$TOTAL_TASKS tasks done)
+- $EPIC_KEY $EPIC_NAME ($DONE_TASKS/$TOTAL_TASKS tasks done)
 
 In Progress:
 - $KEY $TITLE → @$ASSIGNEE
+
+Next up (top of To Do):
+- $KEY $TITLE
 
 Blockers:
 - $BLOCKER_OR_NONE
@@ -144,7 +149,7 @@ $TEAM_MEMBERS_AND_CURRENT_WORK
 ### For PMs:
 
 Same structure but skip the "This Repository" section (architecture, key files,
-commands, conventions). Emphasize team, sprint, client info, deadlines.
+commands, conventions). Emphasize team, active Epics, client info, deadlines.
 
 ## Step 7 — Save and present
 
@@ -156,13 +161,13 @@ ONBOARDING COMPLETE
 ━━━━━━━━━━━━━━━━━━
 Project:  $PROJECT_NAME
 Stack:    $STACK
-Sprint:   $SPRINT_NAME (day $X of $Y)
+Active:   $CURRENT_EPIC_NAME ($DONE/$TOTAL tasks done)
 Team:     $N members active
 
 Saved: ONBOARDING.md (update it when you discover useful info)
 
 Tip: Use the PM subagent (@pm) for ongoing questions about
-sprint, tickets, blockers, and team.
+active Epics, tickets, blockers, and team.
 ```
 
 ## Rules
@@ -170,7 +175,7 @@ sprint, tickets, blockers, and team.
 - NEVER include secrets, passwords, API keys, or tokens in the briefing.
 - NEVER guess about architecture. Read the actual code structure.
 - If Jira project description is empty, still generate what you can from
-  the codebase and sprint data. Note what's missing so it can be filled in.
+  the codebase and current work data. Note what's missing so it can be filled in.
 - If ONBOARDING.md already exists, update it — don't overwrite tips or
   notes that developers added manually.
 - Keep the briefing scannable — developers should get value in 5 minutes.
