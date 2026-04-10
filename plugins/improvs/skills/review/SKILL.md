@@ -17,8 +17,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 Base branch: read from the project's CLAUDE.md (look for "base branch", "default
 branch", or "PR target"). Default to `develop`. **Exception:** if the Jira
-ticket has label `hotfix` or the /start comment contains `Hotfix: true`,
-the base is `main`.
+ticket has label `hotfix`, the base is `main`.
 
 If the current branch is `main`, `develop`, or another protected branch,
 abort: "Cannot /review from $BRANCH. Switch to a feature branch first."
@@ -105,7 +104,7 @@ Apply both global rules (security, conventions) and stack-specific rules
 (Flutter / .NET / Python / Docker patterns).
 
 ## Mode
-${IF Jira ticket has label "hotfix" OR /start comment contains "Hotfix: true":
+${IF Jira ticket has label "hotfix":
    "HOTFIX MODE: focus on correctness, safety, and minimal scope. Skip style
     nitpicks and refactoring suggestions. The fix needs to ship now."
  ELSE:

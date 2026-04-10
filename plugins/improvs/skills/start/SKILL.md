@@ -226,7 +226,8 @@ git push -u origin $KEY-$DESCRIPTION
 
 ## Step 8 — Update Jira ticket fields and move to "In Progress"
 
-Via Jira MCP, update **all** of the following in a single or sequential calls:
+Via Jira MCP, update **all** of the following. Do NOT add a comment — all
+metadata lives in ticket fields so `/finish` and `/review` can read it reliably.
 
 **Transition:** Move ticket to "In Progress".
 
@@ -238,19 +239,11 @@ Via Jira MCP, update **all** of the following in a single or sequential calls:
   - Complex → **8** story points
 - **Labels**: if `$IS_HOTFIX`, add label `hotfix` to existing labels
 
-**Add comment** using proper ADF nodes (never raw Markdown or `\n` in text nodes):
-  - **paragraph**: "⏱ Work started"
-  - **paragraph**: "Branch: $KEY-$DESCRIPTION"
-  - **paragraph**: "Complexity: $COMPLEXITY (trivial / simple / complex)"
-  - **paragraph**: "Story points: $POINTS"
-  - **paragraph**: "Hotfix: $IS_HOTFIX (true / false)"
-  - **paragraph**: "Started at: $ISO_TIMESTAMP"
-
-The timestamp in the comment is critical — `/finish` will read it to calculate
-time spent. Use ISO 8601 format: `2026-04-05T10:30:00.000+0000`
-
-The complexity tag is read by `/finish` to decide whether to require /review and /test.
-The hotfix flag is read by `/finish` to decide whether to create dual PRs (main + develop).
+**No comment.** The `/finish` skill reads metadata from ticket fields:
+- **Complexity** — derived from story points (1→trivial, 3→simple, 8→complex)
+- **Hotfix** — detected from `hotfix` label
+- **Start time** — read from the ticket's changelog / transition history
+  (the timestamp when it was moved to "In Progress")
 
 ## Step 9 — Present summary and begin
 
@@ -328,9 +321,9 @@ executing-plans on its own — `/start` does not need to invoke them directly.
 
 ## Rules
 
-- **ADF formatting:** Always write Jira comments as properly structured ADF nodes (paragraph, strong marks). Never embed raw Markdown syntax or `\n` inside plain text nodes.
+- **No comments.** All metadata goes into Jira ticket fields. Do NOT add comments to the ticket.
+- **Fields are the source of truth.** `/finish` and `/review` read complexity from story points, hotfix from labels, and start time from transition history.
 - NEVER start coding without reading the Jira ticket first.
-- NEVER skip recording the start time in Jira comment — /finish depends on it.
 - NEVER guess if acceptance criteria are ambiguous. Ask the developer.
 - NEVER create a branch without a Jira key prefix.
 - NEVER commit code. Developer commits manually.

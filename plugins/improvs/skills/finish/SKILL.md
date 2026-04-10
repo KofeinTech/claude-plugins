@@ -46,13 +46,14 @@ STOP.
 
 ## Step 2 — Code review and test verification
 
-**First, check task metadata.**
-Read the Jira ticket comments. Find the /start comment with `⏱ Work started`.
-Extract: `Complexity:` value, `Hotfix:` value (true / false), and `Started at:` timestamp.
+**First, check task metadata from Jira ticket fields** (not comments).
 
-**Hotfix detection fallback:** If the comment is missing or `Hotfix:` field is not found,
-also check if the Jira ticket has the label `hotfix`. This matches `/review`'s detection
-logic and ensures hotfix flow works even if `/start` was not used.
+Read the Jira ticket via MCP and extract:
+- **Complexity**: derive from story points field (1→trivial, 3→simple, 8→complex).
+  If story points are not set, treat as "simple" (default).
+- **Hotfix**: check if ticket labels include `hotfix`.
+- **Start time**: read from the ticket's changelog / transition history — find the
+  timestamp when the ticket was moved to "In Progress". This is the work start time.
 
 **If complexity is "trivial"** → skip review and test verification. Proceed to Step 3.
 
@@ -178,29 +179,28 @@ If `$IS_HOTFIX` is true, create a second PR after the first:
 This ensures the hotfix reaches both branches. The `main` PR is merged first
 (urgent), and the `develop` sync PR is merged after.
 
-## Step 5 — Update Jira
+## Step 5 — Update Jira fields and transition
 
 Via Jira MCP:
 
-**Transition ticket to "In Review"**
+**Transition ticket to "In Review".**
 
-**Add comment using proper ADF nodes** (never raw Markdown or `\n` in text nodes):
-- **paragraph**: "Work completed"
-- **paragraph**: "PR: $PR_URL"
-- **paragraph**: "Branch: $BRANCH"
-- **paragraph**: "Actual time: Xh Ym"
+**Update ticket fields:**
+- **End date** (`dueDate`): set to today's date in ISO format (`YYYY-MM-DD`)
+
+No comment needed — PR link is visible in Jira's development panel via GitHub integration.
 
 ## Step 6 — Log time in Jira
 
-**Read the /start comment** from the Jira ticket comments.
-Look for the comment added by /start that contains `⏱ Work started`.
-Extract all three fields (same ones read in Step 2):
-- `Complexity:` — trivial / simple / complex
-- `Hotfix:` — true / false
-- `Started at:` — ISO 8601 timestamp (e.g. `2026-04-05T10:30:00.000+0000`)
+**Read start time from ticket fields** (not comments).
+Get the ticket's changelog / transition history and find the timestamp when
+the ticket was moved to "In Progress". This is `$START_TIMESTAMP`.
+
+If the transition history is unavailable, fall back to the `startDate` field
+(date only, assume start of day in the developer's timezone).
 
 **Calculate duration:**
-From start timestamp to current time (now).
+From `$START_TIMESTAMP` to current time (now).
 
 **Log worklog via Jira MCP:**
 ```
@@ -221,9 +221,9 @@ Finished: $NOW
 Duration: Xh Ym
 ```
 
-If start comment is not found:
-"Could not find start time in Jira comments.
-This happens when /start was not used or the comment was deleted.
+If start time cannot be determined (no transition history and no startDate):
+"Could not find start time in Jira ticket fields.
+This happens when /start was not used.
 How long did you work on this task? (e.g., 2h 30m)"
 
 Log the manually provided time.
@@ -267,10 +267,12 @@ Next: get main PR reviewed and merged urgently. Then merge develop sync PR.
 
 ## Rules
 
-- **ADF formatting:** Always write Jira comments as properly structured ADF nodes (paragraph, strong marks). Never embed raw Markdown syntax or `\n` inside plain text nodes.
+- **Read from fields, not comments.** Complexity from story points, hotfix from labels, start time from transition history.
+- **No comments on start/finish.** PR link is visible via GitHub integration in the development panel.
+- **Set end date.** Always update `dueDate` to today when finishing.
 - NEVER commit code. Developer commits manually before running /finish.
 - NEVER force push.
 - NEVER skip the Jira time logging — this data is critical for estimation.
-- NEVER create PR to `main` unless it is a hotfix (detected from Jira comment) or CLAUDE.md explicitly says so.
+- NEVER create PR to `main` unless it is a hotfix (detected from label) or CLAUDE.md explicitly says so.
 - If start time is missing, ask developer — don't guess or skip.
 - If any AC is not addressed, confirm with developer before creating PR.
