@@ -68,7 +68,7 @@ If the Jira ticket type from Step 1 is `Bug`:
 If you cannot identify a likely root cause from code alone, print confidence
 Low and ask the developer for help locating it before classifying complexity.
 
-For non-Bug ticket types (Story, Task, Epic, etc.), skip this step entirely
+For non-Bug ticket types (Task, Epic, etc.), skip this step entirely
 and proceed to Step 3.
 
 ## Step 3 — Detect hotfix (production emergency)

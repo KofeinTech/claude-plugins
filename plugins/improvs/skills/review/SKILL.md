@@ -34,7 +34,7 @@ a Jira ticket to compare against acceptance criteria."
 Via Jira MCP, read $KEY. Extract:
 
 - Title
-- Type (Bug / Story / Task)
+- Type (Bug / Task / Epic)
 - Priority
 - Acceptance Criteria / AC (this is the source of truth for Step 8)
 - Description (for context)
