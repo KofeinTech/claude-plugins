@@ -326,7 +326,7 @@ executing-plans on its own — `/start` does not need to invoke them directly.
 ## Rules
 
 - **No comments.** All metadata goes into Jira ticket fields. Do NOT add comments to the ticket.
-- **Fields are the source of truth.** `/finish` and `/review` read complexity from story points, hotfix from labels, and start time from transition history.
+- **Labels and fields are the source of truth.** `/finish` and `/review` read complexity from `complexity:*` label, hotfix from `hotfix` label, and start time from transition history.
 - NEVER start coding without reading the Jira ticket first.
 - NEVER guess if acceptance criteria are ambiguous. Ask the developer.
 - NEVER create a branch without a Jira key prefix.
