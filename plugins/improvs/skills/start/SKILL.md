@@ -261,7 +261,7 @@ READY TO START
 Ticket:     $KEY — $TITLE
 Branch:     $KEY-$DESCRIPTION (auto)
 Complexity: Trivial (cosmetic/text/config change)
-Mode:       Direct fix — no TDD, no /review, no /test
+Mode:       Direct fix — no TDD, no /review, no /write-tests
 
 Acceptance Criteria:
 - [ ] ...
@@ -269,7 +269,7 @@ Acceptance Criteria:
 Make the change, commit, and run /finish.
 ```
 
-No TDD, no /review, no /test required. Developer makes the change, commits, runs /finish.
+No TDD, no /review, no /write-tests required. Developer makes the change, commits, runs /finish.
 The /finish skill will skip review and test verification for trivial tasks.
 
 ### For SIMPLE tasks:
@@ -320,7 +320,7 @@ executing-plans on its own — `/start` does not need to invoke them directly.
 
 ## Skill invocation convention
 
-- **Improvs skills** (`/start`, `/finish`, `/review`, `/test`, etc.) — invoke via the Skill tool using slash name.
+- **Improvs skills** (`/start`, `/finish`, `/review`, `/write-tests`, etc.) — invoke via the Skill tool using slash name.
 - **Superpowers plugins** (`superpowers:brainstorming`, `superpowers:test-driven-development`, etc.) — invoke via the Skill tool using colon-qualified name.
 
 ## Rules

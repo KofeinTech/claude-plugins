@@ -1,6 +1,6 @@
 {
   "name": "improvs",
-  "description": "Improvs workflow skills: /start, /finish, /review, /test, Jira integration, ticket creation, onboarding, and more",
+  "description": "Improvs workflow skills: /start, /finish, /review, /write-tests, Jira integration, ticket creation, onboarding, and more",
   "version": "1.0.0",
   "author": {
     "name": "Improvs"

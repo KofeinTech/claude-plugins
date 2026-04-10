@@ -66,7 +66,7 @@ If review finds Critical or Important issues, STOP:
 Show the issues list. Do NOT proceed until the developer re-runs /finish
 with a clean review.
 
-Skip /test verification entirely — hotfixes ship fast.
+Skip /write-tests verification entirely — hotfixes ship fast.
 
 **If complexity is "simple" or "complex" (and NOT hotfix):**
 Invoke the `/review` skill via the Skill tool (which internally invokes
@@ -77,7 +77,7 @@ If review finds issues, STOP:
 Show the issues list. Do NOT proceed until the developer re-runs /finish
 with a clean review.
 
-**Then verify /test was run:**
+**Then verify /write-tests was run:**
 
 Check the git diff (committed files) for test files.
 Look for new or modified files matching common test patterns:
@@ -91,11 +91,11 @@ If test files found in diff → proceed.
 
 If NO test files found:
 "No test files were added or modified.
-The /test sub-agent should be run before finishing.
+The /write-tests sub-agent should be run before finishing.
 
-Run /test now? (yes / skip)"
+Run /write-tests now? (yes / skip)"
 
-If developer says "yes" → invoke the `/test` skill via the Skill tool, then continue.
+If developer says "yes" → invoke the `/write-tests` skill via the Skill tool, then continue.
 If developer says "skip" → warn: "Proceeding without independent tests."
 Continue, but add warning marker in PR body.
 
@@ -146,15 +146,15 @@ ensure each line break is an actual newline in the string value.
 ## Testing
 - [x] Unit tests: N added/modified
 - [x] Integration tests: N added/modified (if applicable)
-- [x] Independent test review (/test sub-agent)
+- [x] Independent test review (/write-tests sub-agent)
 - [x] All tests passing
 
 ## Notes
 Any additional context, decisions made, or things reviewer should know.
 ```
 
-If /test was skipped in Step 2, replace the test review line with:
-`- [ ] Independent test review (/test sub-agent) -- skipped`
+If /write-tests was skipped in Step 2, replace the test review line with:
+`- [ ] Independent test review (/write-tests sub-agent) -- skipped`
 
 **Read the Jira ticket** via Jira MCP to get the acceptance criteria
 for the PR body. Check each AC against the actual implementation.

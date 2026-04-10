@@ -1,9 +1,9 @@
 ---
-name: test
+name: write-tests
 description: Run independent test generation on the current branch. Dispatches test subagent that writes tests from Jira AC, not from implementation.
 ---
 
-# Test
+# Write Tests
 
 No arguments. Runs against the current branch.
 
@@ -39,9 +39,9 @@ that confirm the code works, instead of tests that verify the AC is met.
 
 ## Rules
 
-- NEVER skip /test for simple or complex tasks. /finish will block PR creation
+- NEVER skip /write-tests for simple or complex tasks. /finish will block PR creation
   if no test files were added or modified on the branch.
-- For trivial tasks, /test is skipped — there is no AC and no logic to test.
+- For trivial tasks, /write-tests is skipped — there is no AC and no logic to test.
 - The subagent reports failing tests as potential bugs. Do NOT modify the
   generated tests to make them pass. Investigate whether the test or the
   code is wrong, then fix the actual issue.
