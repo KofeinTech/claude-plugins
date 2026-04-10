@@ -49,8 +49,8 @@ STOP.
 **First, check task metadata from Jira ticket fields** (not comments).
 
 Read the Jira ticket via MCP and extract:
-- **Complexity**: derive from story points field (1→trivial, 3→simple, 8→complex).
-  If story points are not set, treat as "simple" (default).
+- **Complexity**: read from labels — look for `complexity:trivial`, `complexity:simple`, or `complexity:complex`.
+  If no complexity label is set, treat as "simple" (default).
 - **Hotfix**: check if ticket labels include `hotfix`.
 - **Start time**: read from the ticket's changelog / transition history — find the
   timestamp when the ticket was moved to "In Progress". This is the work start time.
@@ -271,7 +271,7 @@ Next: get main PR reviewed and merged urgently. Then merge develop sync PR.
 
 ## Rules
 
-- **Read from fields, not comments.** Complexity from story points, hotfix from labels, start time from transition history.
+- **Read from labels and fields, not comments.** Complexity from `complexity:*` label, hotfix from `hotfix` label, start time from transition history.
 - **No comments on start/finish.** PR link is visible via GitHub integration in the development panel.
 - **Set end date.** Always update `dueDate` to today when finishing.
 - NEVER commit code. Developer commits manually before running /finish.

@@ -233,19 +233,19 @@ metadata lives in ticket fields so `/finish` and `/review` can read it reliably.
 
 **Update ticket fields:**
 - **Start date** (`startDate`): set to today's date in ISO format (`YYYY-MM-DD`)
-- **Story points** (`story_points` or `customfield_10016`): set based on complexity:
-  - Trivial → **1** story point
-  - Simple → **3** story points
-  - Complex → **8** story points
-- **Labels**: if `$IS_HOTFIX`, add label `hotfix` to existing labels
+- **Labels**: add complexity label based on classification:
+  - Trivial → add label `complexity:trivial`
+  - Simple → add label `complexity:simple`
+  - Complex → add label `complexity:complex`
+  - If `$IS_HOTFIX`, also add label `hotfix`
 
 **Development panel:** The branch automatically appears in the ticket's Development
 section because the branch name contains the ticket key (`$KEY-$DESCRIPTION`)
 and is pushed to origin. This is handled by the GitHub for Jira integration app.
 
-**No comment.** The `/finish` skill reads metadata from ticket fields:
-- **Complexity** — derived from story points (1→trivial, 3→simple, 8→complex)
-- **Hotfix** — detected from `hotfix` label
+**No comment.** The `/finish` skill reads metadata from labels:
+- **Complexity** — from `complexity:trivial`, `complexity:simple`, or `complexity:complex` label
+- **Hotfix** — from `hotfix` label
 - **Start time** — read from the ticket's changelog / transition history
   (the timestamp when it was moved to "In Progress")
 
