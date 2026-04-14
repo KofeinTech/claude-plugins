@@ -99,6 +99,25 @@ If developer says "yes" → invoke the `/test` skill via the Skill tool, then co
 If developer says "skip" → warn: "Proceeding without independent tests."
 Continue, but add warning marker in PR body.
 
+**Then verify figma-check for UI tasks:**
+
+Check if `design/screens/` exists and contains JSON files. If it does, this is
+a UI task and design verification is required.
+
+Check git diff for changes in `lib/` that look like UI code (screen files, widget files).
+If UI code was changed AND design JSON exists:
+
+"This task has a Figma design export. Running /improvs:figma-check to verify
+the implementation matches the design."
+
+Invoke `/improvs:figma-check` via the Skill tool with the relevant screen JSON.
+
+If figma-check reports **mismatches**, STOP:
+"Design verification found mismatches. Please fix and commit, then run /finish again."
+Show the mismatches. Do NOT proceed until fixed.
+
+If figma-check reports only matches (and possibly designer inconsistencies), proceed.
+
 ## Step 3 — Push
 
 ```bash

@@ -143,7 +143,43 @@ curl -s -o "design/assets/images/$NAME.png" "$IMAGE_URL"
 ```
 
 Save to `design/assets/images/`. Deduplicate by imageRef -- don't download
-the same image twice. Use the Figma node name for the filename.
+the same image twice.
+
+#### Image naming rules (critical)
+
+Generic Figma names like `image`, `image-13`, `Rectangle`, `Frame` are useless
+for developers. Use smart naming with this priority:
+
+1. **Semantic node name** -- if the node has a descriptive name (not generic),
+   use it: `hero-banner`, `user-avatar`, `product-photo`.
+2. **Parent node name** -- if the image node name is generic, walk up to the
+   nearest parent with a semantic name and use `{parent}-image`:
+   `onboarding-step1-image`, `profile-header-image`.
+3. **Screen + position** -- if both node and parent names are generic, use
+   the screen name + position index (top-to-bottom order within the screen):
+   `onboarding-image-1`, `onboarding-image-2`, `onboarding-image-3`.
+
+Generic names to reject (case-insensitive): `image`, `image-*`, `rectangle`,
+`frame`, `group`, `vector`, `fill`, `mask`, `bitmap`, any name that is purely
+numeric or matches `^(image|img|pic|photo|rect|frame|group)[-_]?\d*$`.
+
+Also record the **purpose annotation** in the screen JSON for each image node.
+Add a `"imageContext"` field with: the parent node name, sibling text nodes
+(if any), and the image's position in the screen (e.g., "top", "center",
+"bottom"). This helps the developer understand which image goes where:
+
+```json
+{
+  "type": "IMAGE",
+  "name": "onboarding-step1-image",
+  "asset": "assets/images/onboarding-step1-image.png",
+  "imageContext": {
+    "parent": "OnboardingStep1",
+    "nearbyText": ["Welcome to the app", "Get started"],
+    "position": "center"
+  }
+}
+```
 
 Sanitize all filenames: lowercase, replace spaces with `-`, remove special chars.
 
@@ -201,9 +237,11 @@ Transformation rules:
 - Keep `layoutMode`, `primaryAxisAlignItems`, `counterAxisAlignItems`, `itemSpacing`
 - Keep `cornerRadius`, `strokes`, `effects` (shadows)
 - For TEXT: extract `characters` and flatten style into `typography` object
-- For images: replace with `{ "type": "IMAGE", "name": "...", "asset": "assets/name.svg" }`
+- For images: replace with `{ "type": "IMAGE", "name": "...", "asset": "assets/name.svg", "imageContext": {...} }`
 - Recursively process `children`
 - Preserve the node `name` — it drives widget/class naming
+- For TEXT nodes: include `textAlignHorizontal` and `textAlignVertical` from Figma
+- For all FRAME nodes: always include `primaryAxisAlignItems` and `counterAxisAlignItems` — these drive Flutter alignment (CENTER, MIN, MAX, SPACE_BETWEEN)
 
 ## Step 6 — Save to design/ folder
 

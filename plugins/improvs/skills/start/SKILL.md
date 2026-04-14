@@ -165,13 +165,33 @@ If developer provides a URL, try to read the design:
 
 From the local design JSON, extract:
 - Layout structure (flex, grid, positioning)
-- Spacing values (padding, margin, gaps)
+- **Axis alignment** (`primaryAxisAlignItems`, `counterAxisAlignItems`) for every frame
+- **Text alignment** (`textAlignHorizontal`) for every text node
+- Spacing values (padding, margin, gaps) — exact pixel values
 - Colors (exact hex or design tokens)
-- Typography (font, size, weight)
+- Typography (font, size, weight, lineHeight)
+- Component styling — buttons, inputs, cards (cornerRadius, padding, fills)
 - Component variants and states
 - Interactive behaviors described in design
+- **Image assets** — check `imageContext` for parent names and nearby text
 
 Save this context — you will need it during implementation and verification.
+
+**Design implementation rules** (display to developer and enforce during build):
+
+```
+DESIGN RULES (mandatory for this task)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. SPACING IS EXACT: copy padding/itemSpacing from JSON, never approximate
+2. ALIGNMENT IS EXACT: CENTER in Figma = center in code, not start/left
+3. COMPONENTS MATCH DESIGN: override Flutter defaults with design values
+   (cornerRadius, padding, fills, text style)
+4. TEXT ALIGNMENT: textAlignHorizontal CENTER = TextAlign.center
+5. Run /improvs:figma-check after building to verify
+```
+
+These rules prevent the most common implementation errors (wrong spacing,
+text not centered, buttons using Material defaults instead of design values).
 
 If developer says there is no Figma design, note this and proceed.
 

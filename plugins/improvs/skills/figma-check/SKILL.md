@@ -19,11 +19,13 @@ Also read `design/tokens.json` if it exists.
 
 Extract:
 - Layout structure (flex direction, alignment, wrapping)
+- **Text alignment** (`textAlignHorizontal`: LEFT/CENTER/RIGHT/JUSTIFIED)
+- **Axis alignment** (`primaryAxisAlignItems`, `counterAxisAlignItems`: MIN/CENTER/MAX/SPACE_BETWEEN/STRETCH)
 - Spacing values (padding, margin, gaps — all values in px)
 - Colors (hex values, opacity)
 - Typography (font family, size, weight, line height, letter spacing)
 - Border radius, borders, shadows
-- Component variants and states
+- Component variants and states (especially buttons — check radius, padding, fills, text style)
 - Icon sizes
 - Image aspect ratios
 
@@ -61,10 +63,13 @@ Use the Figma node name to locate the matching file(s).
 
 Read the implementation code and extract the same properties:
 - Layout (Row/Column/Flex, alignment, wrapping)
-- Spacing values used (padding, margin, gap)
+- **MainAxisAlignment and CrossAxisAlignment** on every Row/Column/Flex
+- **TextAlign** on every Text widget
+- Spacing values used (padding, margin, gap) -- every SizedBox gap and EdgeInsets
 - Colors referenced (hex, theme tokens, CSS variables)
-- Typography (font, size, weight)
+- Typography (font, size, weight, line height)
 - Border radius, borders, shadows
+- **Button/component styling**: decoration, padding, text style, shape, elevation
 
 ## Step 4 — Compare with smart matching
 
@@ -85,6 +90,8 @@ Example:
 - Font weight: must be exact match
 - Border radius: ignore differences of 1px or less
 - Layout direction/alignment: must be exact match
+- Text alignment (horizontal/vertical): must be exact match -- CENTER is not START
+- Button/component styling: all of border radius, padding, fills, text style must match
 
 **Token preference:** If the implementation uses a design token name
 (e.g., `Theme.spacing.md` or `gap-4`) that maps to the correct value,
@@ -154,3 +161,9 @@ All clear? Fix mismatches and commit.
   A wrong layout direction is worse than 2px spacing difference.
 - If the Figma design has multiple states (hover, pressed, disabled),
   check that the implementation handles all states.
+- **High-priority checks** (most common implementation errors):
+  1. Text centering -- verify every Text widget's `textAlign` matches the design's `textAlignHorizontal`. CENTER in Figma must be `TextAlign.center` in Flutter, not omitted (which defaults to left).
+  2. Axis alignment -- verify every Column/Row's `mainAxisAlignment` and `crossAxisAlignment` match the design's `primaryAxisAlignItems` and `counterAxisAlignItems`. CENTER must be explicitly set.
+  3. Spacing between elements -- verify every `itemSpacing` in the design has a corresponding `SizedBox` or gap in the implementation with the exact same value.
+  4. Button styling -- verify border radius, internal padding, background color, and text style all match the design node. Flutter Material defaults must be overridden.
+  5. Image naming -- verify exported image filenames are descriptive (not generic like `image-13`). Flag any generic names that slipped through.
