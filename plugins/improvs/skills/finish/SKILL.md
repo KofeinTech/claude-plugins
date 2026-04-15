@@ -128,9 +128,9 @@ If push fails, show the error and suggest resolution.
 NEVER use `--force`. If push is rejected due to remote changes,
 tell the developer to pull and resolve conflicts.
 
-## Step 4 — Create PR via GitHub MCP
+## Step 4 — Create PR via gh CLI
 
-Use GitHub MCP to create a pull request.
+Use `gh pr create` to create a pull request.
 
 **Base branch:**
 If `$IS_HOTFIX` is true (from Step 2), the base branch is `main` — always,
@@ -145,10 +145,8 @@ If multiple commits, generate title from Jira ticket title:
 Where $SCOPE is derived from the primary directory changed
 (e.g., `auth`, `settings`, `api`).
 
-**PR body:** Use the template below. **CRITICAL: The body MUST be a properly
-formatted multi-line string with real newline characters — NOT a single line
-with literal `\n` escape sequences.** When passing the body to GitHub MCP,
-ensure each line break is an actual newline in the string value.
+**PR body:** Use the template below. Pass the body via a HEREDOC to preserve
+formatting.
 
 ```markdown
 ## Jira Ticket
@@ -175,6 +173,14 @@ Any additional context, decisions made, or things reviewer should know.
 If /test was skipped in Step 2, replace the test review line with:
 `- [ ] Independent test review (/test sub-agent) -- skipped`
 
+**Create the PR:**
+```bash
+gh pr create --base $BASE_BRANCH --title "$PR_TITLE" --body "$(cat <<'EOF'
+$PR_BODY
+EOF
+)"
+```
+
 **Read the Jira ticket** via Jira MCP to get the acceptance criteria
 for the PR body. Check each AC against the actual implementation.
 
@@ -185,15 +191,14 @@ Let developer confirm before proceeding.
 **Hotfix: create a second PR to sync back to develop.**
 
 If `$IS_HOTFIX` is true, create a second PR after the first:
-- Base: `develop`
-- Head: `$BRANCH`
-- Title: `sync: merge hotfix $KEY into develop`
-- Body (multi-line, NOT literal `\n`):
-  ```
-  Syncing hotfix $KEY ($TITLE) from main back to develop.
+```bash
+gh pr create --base develop --title "sync: merge hotfix $KEY into develop" --body "$(cat <<EOF
+Syncing hotfix $KEY ($TITLE) from main back to develop.
 
-  Source PR: #$FIRST_PR_NUMBER
-  ```
+Source PR: #$FIRST_PR_NUMBER
+EOF
+)"
+```
 
 This ensures the hotfix reaches both branches. The `main` PR is merged first
 (urgent), and the `develop` sync PR is merged after.

@@ -21,7 +21,7 @@ This changes what to emphasize:
 **From Jira** — via Jira MCP, read the project description for $PROJECT.
 Extract operational info: repos, client, contacts, links, deadlines, team.
 
-**From Wiki** — via GitHub MCP or `gh` CLI, read from `KofeinTech/wiki`
+**From Wiki** — via `gh` CLI, read from `KofeinTech/wiki`
 in the `$PROJECT/` folder. This contains permanent knowledge:
 architecture decisions, setup guides, API contracts, how things work.
 
