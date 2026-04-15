@@ -8,7 +8,9 @@
   "mcpServers": "./.mcp.json",
   "userConfig": {
     "github_pat": {
-      "description": "GitHub Personal Access Token. Create at: https://github.com/settings/tokens/new?scopes=repo,read:org,read:user&description=Claude+Code+MCP",
+      "title": "GitHub Personal Access Token",
+      "description": "Create at: https://github.com/settings/tokens/new?scopes=repo,read:org,read:user&description=Claude+Code+MCP",
+      "type": "string",
       "sensitive": true
     }
   }
