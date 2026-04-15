@@ -1,17 +1,9 @@
 {
   "name": "improvs",
   "description": "Improvs workflow skills: /start, /finish, /review, /test, Jira integration, ticket creation, onboarding, and more",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Improvs"
   },
-  "mcpServers": "./.mcp.json",
-  "userConfig": {
-    "github_pat": {
-      "title": "GitHub Personal Access Token",
-      "description": "Create at: https://github.com/settings/tokens/new?scopes=repo,read:org,read:user&description=Claude+Code+MCP",
-      "type": "string",
-      "sensitive": true
-    }
-  }
+  "mcpServers": "./.mcp.json"
 }
