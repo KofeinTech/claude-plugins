@@ -351,7 +351,10 @@ design/
 
 The screen filename is derived from the Figma frame name:
 - PascalCase → snake_case (e.g., `LoginScreen` → `login_screen`)
-- Strip spaces and special characters
+- Lowercase, replace spaces and special chars with `_`, collapse multiple `_`
+- **Keep Unicode letters (Cyrillic, etc.) as-is** — do NOT strip non-ASCII. Use `re.sub(r'[^\w]+', '_', name.lower()).strip('_')` with Unicode-aware `\w`
+- Example: `Підписки vertical` → `підписки_vertical`, `Бригади--Фільтрувати` → `бригади_фільтрувати`
+- If the resulting filename is empty after sanitization, use the Figma node ID as fallback: `screen_{node_id}`
 
 If `design/tokens.json` already exists, merge new tokens into it
 (add new values, don't remove existing ones). This allows incremental
