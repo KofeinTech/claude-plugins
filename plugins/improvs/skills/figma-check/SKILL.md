@@ -17,17 +17,19 @@ Read the JSON file from the repo. It was created by `/improvs:figma-export`
 and already contains the simplified structure with layout, colors, typography.
 Also read `design/tokens.json` if it exists.
 
-Extract:
-- Layout structure (flex direction, alignment, wrapping)
-- **Text alignment** (`textAlignHorizontal`: LEFT/CENTER/RIGHT/JUSTIFIED)
-- **Axis alignment** (`primaryAxisAlignItems`, `counterAxisAlignItems`: MIN/CENTER/MAX/SPACE_BETWEEN/STRETCH)
-- Spacing values (padding, margin, gaps — all values in px)
-- Colors (hex values, opacity)
-- Typography (font family, size, weight, line height, letter spacing)
-- Border radius, borders, shadows
-- Component variants and states (especially buttons — check radius, padding, fills, text style)
-- Icon sizes
-- Image aspect ratios
+The design JSON contains ALL Figma properties. Extract and compare these against the implementation:
+
+**Layout:** `layoutMode`, `primaryAxisAlignItems`, `counterAxisAlignItems`, `primaryAxisSizingMode`, `counterAxisSizingMode`, `layoutWrap`, spacing (`padding`, `itemSpacing`)
+
+**Child layout:** `layoutAlign` (STRETCH/INHERIT), `layoutGrow` (0/1), `layoutPositioning` (AUTO/ABSOLUTE)
+
+**Text:** `textAlignHorizontal`, `textAlignVertical`, `textAutoResize`, `typography` (fontFamily, fontSize, fontWeight, lineHeightPx, lineHeightRatio, letterSpacing, textDecoration, textCase), `characterStyleOverrides` for mixed-style spans
+
+**Visual:** `fills`, `strokes` (hex + opacity), `opacity` (layer-level), `cornerRadius`/`rectangleCornerRadii`, `effects` (shadows, blurs with offset/blur/spread/color), `strokeWeight`, `strokeAlign`, `clipsContent`
+
+**Components:** Button/input styling (radius, padding, fills, text style, effects), component variants and states, icon sizes, image aspect ratios and `scaleMode`
+
+**Absolute positioning:** `constraints` (horizontal/vertical), `x`/`y` position, `absoluteBoundingBox`
 
 ## Step 2 — Read the design tokens
 
@@ -62,14 +64,34 @@ Find the screen/component files that correspond to the Figma design.
 Use the Figma node name to locate the matching file(s).
 
 Read the implementation code and extract the same properties:
-- Layout (Row/Column/Flex, alignment, wrapping)
-- **MainAxisAlignment and CrossAxisAlignment** on every Row/Column/Flex
-- **TextAlign** on every Text widget
-- Spacing values used (padding, margin, gap) -- every SizedBox gap and EdgeInsets
-- Colors referenced (hex, theme tokens, CSS variables)
-- Typography (font, size, weight, line height)
-- Border radius, borders, shadows
-- **Button/component styling**: decoration, padding, text style, shape, elevation
+
+**Layout:**
+- Row/Column/Flex usage and direction
+- `mainAxisAlignment` and `crossAxisAlignment` on every Row/Column/Flex
+- `mainAxisSize` on every Row/Column (min vs max)
+- Expanded/Flexible wrapping on children (maps to layoutGrow)
+- width/height: double.infinity on children (maps to layoutAlign: STRETCH)
+- Stack + Positioned usage (maps to absolute positioning)
+
+**Text:**
+- `TextAlign` on every Text widget
+- `TextStyle.height` (line height ratio)
+- `TextHeightBehavior` with `TextLeadingDistribution.even` (MUST be present when custom height is set)
+- Font family, weight, size, letterSpacing, decoration
+
+**Spacing:**
+- Every SizedBox gap and EdgeInsets value
+- Match against design's `padding` and `itemSpacing`
+
+**Visual:**
+- Colors (hex, theme tokens)
+- Opacity: check if using Opacity widget vs color alpha
+- Border radius (per-corner if non-uniform)
+- BoxShadow parameters (offset, blur, spread, color)
+- BoxDecoration for gradients
+
+**Components:**
+- Button/input styling: decoration, padding, text style, shape, elevation
 
 ## Step 4 — Compare with smart matching
 
@@ -161,9 +183,15 @@ All clear? Fix mismatches and commit.
   A wrong layout direction is worse than 2px spacing difference.
 - If the Figma design has multiple states (hover, pressed, disabled),
   check that the implementation handles all states.
-- **High-priority checks** (most common implementation errors):
-  1. Text centering -- verify every Text widget's `textAlign` matches the design's `textAlignHorizontal`. CENTER in Figma must be `TextAlign.center` in Flutter, not omitted (which defaults to left).
-  2. Axis alignment -- verify every Column/Row's `mainAxisAlignment` and `crossAxisAlignment` match the design's `primaryAxisAlignItems` and `counterAxisAlignItems`. CENTER must be explicitly set.
-  3. Spacing between elements -- verify every `itemSpacing` in the design has a corresponding `SizedBox` or gap in the implementation with the exact same value.
-  4. Button styling -- verify border radius, internal padding, background color, and text style all match the design node. Flutter Material defaults must be overridden.
-  5. Image naming -- verify exported image filenames are descriptive (not generic like `image-13`). Flag any generic names that slipped through.
+- **High-priority checks** (most common implementation errors, ordered by frequency):
+  1. **Text leading distribution** -- verify every Text with custom `height` has `textHeightBehavior: TextHeightBehavior(leadingDistribution: TextLeadingDistribution.even)`. Without this, text vertical position will NOT match Figma. This is the #1 cause of pixel drift.
+  2. **Text centering** -- verify every Text widget's `textAlign` matches the design's `textAlignHorizontal`. CENTER in Figma must be `TextAlign.center` in Flutter, not omitted (which defaults to left).
+  3. **Axis alignment** -- verify every Column/Row's `mainAxisAlignment` and `crossAxisAlignment` match the design's `primaryAxisAlignItems` and `counterAxisAlignItems`. CENTER must be explicitly set.
+  4. **layoutAlign: STRETCH** -- verify children with `layoutAlign: STRETCH` have `width: double.infinity` (in Column) or `height: double.infinity` (in Row), or parent uses `CrossAxisAlignment.stretch`.
+  5. **layoutGrow: 1** -- verify children with `layoutGrow: 1` are wrapped in `Expanded()`.
+  6. **Spacing between elements** -- verify every `itemSpacing` in the design has a corresponding `SizedBox` or gap in the implementation with the exact same value.
+  7. **Button styling** -- verify border radius, internal padding, background color, and text style all match the design node. Flutter Material defaults must be overridden.
+  8. **Shadow order** -- multiple shadows in Flutter render back-to-front. Verify the order is reversed from the Figma layer order.
+  9. **Opacity** -- verify layer opacity uses color alpha (`.withValues(alpha:)`) not the `Opacity` widget when possible (performance).
+  10. **Image naming** -- verify exported image filenames are descriptive (not generic like `image-13`). Flag any generic names that slipped through.
+  11. **SVG/PNG fallback** -- verify icons that fell back to PNG export (boolean operations) use `Image.asset()` not `SvgPicture.asset()`.

@@ -182,16 +182,36 @@ Save this context — you will need it during implementation and verification.
 ```
 DESIGN RULES (mandatory for this task)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SPACING & LAYOUT:
 1. SPACING IS EXACT: copy padding/itemSpacing from JSON, never approximate
-2. ALIGNMENT IS EXACT: CENTER in Figma = center in code, not start/left
-3. COMPONENTS MATCH DESIGN: override Flutter defaults with design values
-   (cornerRadius, padding, fills, text style)
-4. TEXT ALIGNMENT: textAlignHorizontal CENTER = TextAlign.center
-5. Run /improvs:figma-check after building to verify
+2. ALIGNMENT IS EXACT: primaryAxisAlignItems → MainAxisAlignment,
+   counterAxisAlignItems → CrossAxisAlignment. CENTER = center, not start.
+3. layoutAlign: STRETCH → width/height: double.infinity or CrossAxisAlignment.stretch
+4. layoutGrow: 1 → wrap child in Expanded()
+5. primaryAxisSizingMode: AUTO → MainAxisSize.min, FIXED → MainAxisSize.max
+6. Non-auto-layout frames → Stack + Positioned (never Row/Column with negative margins)
+
+TEXT (most common source of pixel drift):
+7. textAlignHorizontal CENTER → TextAlign.center (never omit — defaults to left)
+8. Line height: height = lineHeightPx / fontSize (ratio, not raw px)
+9. EVERY Text with custom height MUST have:
+   textHeightBehavior: TextHeightBehavior(leadingDistribution: TextLeadingDistribution.even)
+   Without this, text will be visibly misaligned vs Figma.
+
+VISUAL:
+10. COMPONENTS MATCH DESIGN: override Flutter defaults with design values
+    (cornerRadius, padding, fills, text style, shadows)
+11. Opacity: prefer color.withValues(alpha: x) over Opacity widget
+12. Shadows: BoxShadow with exact offset, blur, spread, color from design JSON
+13. Multiple shadows: reverse order from Figma (Flutter renders back-to-front)
+
+VERIFY:
+14. Run /improvs:figma-check after building to verify
 ```
 
-These rules prevent the most common implementation errors (wrong spacing,
-text not centered, buttons using Material defaults instead of design values).
+These rules prevent the most common implementation errors: wrong spacing,
+text not centered, missing Expanded, wrong text leading distribution,
+buttons using Material defaults instead of design values.
 
 If developer says there is no Figma design, note this and proceed.
 

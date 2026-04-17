@@ -114,16 +114,61 @@ Find nodes that are icons:
 - Nodes whose name contains `icon` (case-insensitive)
 - Nodes of type INSTANCE whose component name suggests an icon
 
-Collect their node IDs and request SVG export in batches of up to 50:
+**Separate icons into two groups before export:**
+- **Safe for SVG:** VECTOR, LINE, INSTANCE (simple icons), any node WITHOUT nested BOOLEAN_OPERATION
+- **Risky (may fail SVG):** BOOLEAN_OPERATION nodes, deeply nested boolean groups, nodes with image fills
+
+### SVG export (safe group)
+
+Collect node IDs and request SVG export in batches of up to 50 with quality parameters:
 ```bash
 curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
-  "https://api.figma.com/v1/images/$FILE_KEY?ids=$IDS&format=svg"
+  "https://api.figma.com/v1/images/$FILE_KEY?ids=$IDS&format=svg&svg_simplify_stroke=true&svg_outline_text=true&use_absolute_bounds=true"
 ```
+
+The extra parameters prevent common SVG failures:
+- `svg_simplify_stroke=true` — converts inside/outside strokes to center (SVG only supports center)
+- `svg_outline_text=true` — converts text to vector paths (no font dependency)
+- `use_absolute_bounds=true` — prevents clipping on text nodes and offset elements
 
 Download each SVG to `design/assets/`:
 ```bash
 curl -s -o "design/assets/$ICON_NAME.svg" "$SVG_URL"
 ```
+
+### Validate every downloaded SVG
+
+After downloading, validate each SVG file is not broken:
+
+1. **Check file is not empty** (0 bytes)
+2. **Check for empty `<filter>` elements** — Figma sometimes generates `<filter id="..."></filter>` with zero primitives, which makes the entire group invisible per SVG spec. If found, remove the empty filter and the `filter="url(#...)"` reference.
+3. **Check for empty `<clipPath>` elements** — variant components with `ClipContents: false` can produce empty clip-paths that blank the output
+4. **Check the SVG has visible content** — at minimum one `<path>`, `<circle>`, `<rect>`, `<polygon>`, or `<line>` element with a non-empty `d` attribute or dimensions
+
+If validation fails on any SVG, move it to the PNG fallback group.
+
+### PNG fallback (risky group + failed SVGs)
+
+For BOOLEAN_OPERATION nodes and any SVGs that failed validation, export as PNG @3x instead:
+```bash
+curl -s -H "X-Figma-Token: $FIGMA_API_KEY" \
+  "https://api.figma.com/v1/images/$FILE_KEY?ids=$IDS&format=png&scale=3"
+```
+
+Download to `design/assets/` with `.png` extension. Log which icons fell back to PNG:
+```
+SVG EXPORT: 12 icons as SVG, 3 fell back to PNG (boolean operations)
+  PNG fallback: icon-merge.png, icon-union.png, icon-subtract.png
+```
+
+### Retry on failure
+
+If the images API returns `null` for any node ID (rendering failed silently):
+1. Retry that specific node once after 3 seconds
+2. If still null, try PNG fallback at scale=3
+3. If PNG also null, skip and warn: "Could not export node $NAME ($ID) — may be invisible or have 0% opacity"
+
+If the API returns 429 (rate limited), read the `Retry-After` header and wait that many seconds before retrying.
 
 ### Export image fills (photos, avatars, backgrounds)
 
@@ -185,9 +230,10 @@ Sanitize all filenames: lowercase, replace spaces with `-`, remove special chars
 
 ## Step 5 — Build the screen JSON
 
-Create a simplified, Claude-friendly JSON structure from the raw Figma data.
-Strip unnecessary fields (like `id`, `absoluteBoundingBox`, `constraints` for
-absolute positioning). Keep only what matters for code generation:
+Create a comprehensive JSON structure from the raw Figma data.
+**Keep ALL properties** from every node — do NOT strip any fields.
+The only transformations are format conversions (colors, padding) and
+adding computed helper fields. Missing properties cause pixel-imperfect code.
 
 ```json
 {
@@ -200,29 +246,49 @@ absolute positioning). Keep only what matters for code generation:
     "layoutMode": "VERTICAL",
     "primaryAxisAlignItems": "CENTER",
     "counterAxisAlignItems": "CENTER",
+    "primaryAxisSizingMode": "FIXED",
+    "counterAxisSizingMode": "FIXED",
     "padding": { "top": 24, "right": 16, "bottom": 24, "left": 16 },
     "itemSpacing": 16,
     "size": { "width": 375, "height": 812 },
     "fills": [{ "type": "SOLID", "hex": "#FFFFFF", "opacity": 1 }],
     "cornerRadius": 0,
+    "opacity": 1,
+    "effects": [
+      {
+        "type": "DROP_SHADOW",
+        "offset": { "x": 0, "y": 4 },
+        "blur": 12,
+        "spread": 0,
+        "color": { "hex": "#000000", "opacity": 0.08 }
+      }
+    ],
+    "clipsContent": true,
     "children": [
       {
         "type": "TEXT",
         "name": "Title",
         "characters": "Welcome Back",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "CENTER",
+        "textAutoResize": "HEIGHT",
         "typography": {
           "fontFamily": "Inter",
           "fontSize": 32,
           "fontWeight": 700,
-          "lineHeight": 40,
+          "lineHeightPx": 40,
+          "lineHeightRatio": 1.25,
           "letterSpacing": -0.5
         },
-        "fills": [{ "type": "SOLID", "hex": "#1A1A2E" }]
+        "fills": [{ "type": "SOLID", "hex": "#1A1A2E" }],
+        "opacity": 1
       },
       {
         "type": "FRAME",
         "name": "EmailField",
         "layoutMode": "HORIZONTAL",
+        "layoutAlign": "STRETCH",
+        "layoutGrow": 0,
         "...": "..."
       }
     ]
@@ -230,18 +296,42 @@ absolute positioning). Keep only what matters for code generation:
 }
 ```
 
-Transformation rules:
-- Convert `color.r/g/b/a` (0-1 floats) to `hex` + `opacity`
-- Convert `absoluteBoundingBox` to `size: { width, height }`
-- Flatten `paddingTop/Right/Bottom/Left` into `padding: { top, right, bottom, left }`
-- Keep `layoutMode`, `primaryAxisAlignItems`, `counterAxisAlignItems`, `itemSpacing`
-- Keep `cornerRadius`, `strokes`, `effects` (shadows)
-- For TEXT: extract `characters` and flatten style into `typography` object
-- For images: replace with `{ "type": "IMAGE", "name": "...", "asset": "assets/name.svg", "imageContext": {...} }`
-- Recursively process `children`
-- Preserve the node `name` — it drives widget/class naming
-- For TEXT nodes: include `textAlignHorizontal` and `textAlignVertical` from Figma
-- For all FRAME nodes: always include `primaryAxisAlignItems` and `counterAxisAlignItems` — these drive Flutter alignment (CENTER, MIN, MAX, SPACE_BETWEEN)
+### Principle: KEEP EVERYTHING, transform only format
+
+**NEVER strip or omit any Figma property.** Every property on every node must appear
+in the output JSON. If Figma returns it, keep it. The goal is ZERO information loss.
+
+### Format conversions (add convenience fields, keep originals):
+
+- **Colors:** Add `hex` + `opacity` from `color.r/g/b/a` floats. Keep raw values too
+- **Bounding box:** Keep `absoluteBoundingBox` and `absoluteRenderBounds` as-is. Add convenience `size: { width, height }`
+- **Padding:** Keep raw `paddingTop/Right/Bottom/Left`. Add convenience `padding: { top, right, bottom, left }`
+- **Line height:** In `typography`, keep `lineHeightPx`. Add computed `lineHeightRatio` (= lineHeightPx / fontSize)
+- **Effects:** Expand each effect's color to include `hex` + `opacity` alongside raw values
+
+### Key property groups (preserve all, highlights for critical ones):
+
+**Layout:** `layoutMode`, `primaryAxisAlignItems`, `counterAxisAlignItems`, `primaryAxisSizingMode`, `counterAxisSizingMode`, `itemSpacing`, `counterAxisSpacing`, `layoutWrap`, all padding fields
+
+**Child layout (on each child):** `layoutAlign` (STRETCH/INHERIT), `layoutGrow` (0/1), `layoutPositioning` (AUTO/ABSOLUTE), `minWidth`, `maxWidth`, `minHeight`, `maxHeight`
+
+**Geometry:** `id`, `type`, `name`, `visible`, `absoluteBoundingBox`, `absoluteRenderBounds`, `relativeTransform`, `rotation`, `constraints` (horizontal/vertical), `x`, `y`
+
+**Appearance:** `fills`, `strokes`, `strokeWeight`, `strokeAlign`, `strokeCap`, `strokeJoin`, `dashPattern`, `opacity`, `blendMode`, `isMask`, `clipsContent`
+
+**Corners:** `cornerRadius`, `rectangleCornerRadii` (per-corner array), `cornerSmoothing`
+
+**Effects:** Each with `type`, `visible`, `offset`, `radius` (blur), `spread`, `color` (hex + opacity)
+
+**Text:** `characters`, `textAlignHorizontal`, `textAlignVertical`, `textAutoResize`, `textTruncation`, `maxLines`, `paragraphSpacing`, `hyperlink`, `styleOverrideTable` + `characterStyleOverrides` (mixed-style spans). Typography: `fontFamily`, `fontPostScriptName`, `fontSize`, `fontWeight`, `italic`, `lineHeightPx`, `lineHeightRatio` (computed), `lineHeightUnit`, `letterSpacing`, `textDecoration`, `textCase`
+
+**Components:** `componentId`, `componentProperties`, `overrides`, `mainComponent`
+
+**Images:** Keep `imageRef`, `scaleMode`, `imageTransform`. Add `"asset"` path and `"imageContext"` (parent name, nearby text, position)
+
+**Vectors:** `fillGeometry`, `strokeGeometry`
+
+**General:** Recursively process all `children`. Preserve any property not listed above.
 
 ## Step 6 — Save to design/ folder
 
@@ -293,7 +383,7 @@ Next steps:
 ## Rules
 
 - NEVER hardcode a Figma PAT in the skill output, code, or files. Always read from `$FIGMA_API_KEY` env var.
-- NEVER export the raw Figma API response as-is. Always transform to the simplified Claude-friendly format. Raw responses are 10-50x larger and waste context.
+- Export ALL properties from the Figma API response. Apply format conversions (hex colors, convenience fields) but NEVER strip or omit properties. Missing properties cause pixel-imperfect implementation downstream.
 - When exporting all screens (no node-id), use a single Python script that batches all API calls efficiently. A full file export of ~70 screens should use ~10-12 API calls total.
 - If `design/` folder doesn't exist, create it. Also create `.gitkeep` files if needed.
 - If curl fails with a network error, suggest the developer check their internet connection and token validity.
